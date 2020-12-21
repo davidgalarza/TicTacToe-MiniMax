@@ -1,13 +1,12 @@
-
+import  Nodo from './Nodo';
 import Juego,  {Ficha, EstadoJuego} from './Juego';
 
 class Maquina {
 
-    tablero: Ficha[][];
-
+    nodoRaizDesicion: Nodo; // Nodo raiz del arbol
 
     constructor(tablero: Ficha[][]){
-        this.tablero = tablero;
+        this.nodoRaizDesicion = new Nodo(tablero);
     }
 
 
@@ -29,22 +28,25 @@ class Maquina {
         let mejorValor = -2; 
         let posicionEscogida: number[] = [];
 
+        let tablero: Ficha[][] = this.nodoRaizDesicion.tablero;
+
         // Recorrer el tablero actual
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
                 // Si la posicion esta vacia prueba ese movimiento
-                if(this.tablero[i][j] === Ficha.vacio){
+                if(tablero[i][j] === Ficha.vacio){
 
-                    this.tablero[i][j] = Ficha.maquina; // Poner ficha
+                    tablero[i][j] = Ficha.maquina; // Poner ficha
+                    let nodoHijo = new Nodo(tablero);
                     // Valor del camino (devuelve el min)
-                    let valorCamino = this.minValor(this.tablero, 0);
+                    let valorCamino = this.minValor(nodoHijo, 0);
 
                     console.log('VALOR CAMINO: ' + valorCamino);
-                    this.mostrar(this.tablero);
+                    this.mostrar(tablero);
 
 
                     // Resetear tablero
-                    this.tablero[i][j] = Ficha.vacio; 
+                    tablero[i][j] = Ficha.vacio; 
                     
 
                     // verificar si el camino es mejor
@@ -54,7 +56,6 @@ class Maquina {
                         posicionEscogida = [i, j];
                     }
                 }
-              
             }
         }
 
@@ -74,7 +75,8 @@ class Maquina {
     }
 
     // Busca el movimiento siguiente de MAYOR valor y devuelve
-    maxValor(tablero: Ficha[][], profundidad: number): number {
+    maxValor(nodo: Nodo, profundidad: number): number {
+        let tablero = nodo.tablero;
         // Verificar si el juego termino
         let estadoJuego: EstadoJuego =  Juego.estado(tablero);
         if(estadoJuego !== EstadoJuego.enCurso) {
@@ -92,8 +94,10 @@ class Maquina {
                 if (tablero[i][j] === Ficha.vacio) {
                     // Poner la ficha de la maquina
                     tablero[i][j] = Ficha.maquina;
+                    let nodoHijo = new Nodo(tablero);
+                    nodo.anadirHijo(nodoHijo);
                     // Obtner el valor devulto por MIN
-                    let valor = this.minValor(tablero, profundidad + 1);
+                    let valor = this.minValor(nodoHijo, profundidad + 1);
                     tablero[i][j] = Ficha.vacio; // Resetea el tablero
                     // Verifica si el valor moviento es mejor (MAYOR) al actual
                     valorEscogido = valor > valorEscogido ? valor : valorEscogido;
@@ -105,7 +109,8 @@ class Maquina {
     }
 
     // Busca el movimiento siguiente de MENOR valor y devuelve
-    minValor(tablero: Ficha[][], profundidad: number): number{
+    minValor(nodo: Nodo, profundidad: number): number{
+        let tablero = nodo.tablero;
         // Verificar si el juego termino
         let estadoJuego: EstadoJuego =  Juego.estado(tablero);
         if(estadoJuego !== EstadoJuego.enCurso){
@@ -123,8 +128,10 @@ class Maquina {
                 if (tablero[i][j] === Ficha.vacio) {
                     // Poner la ficha del humano
                     tablero[i][j] = Ficha.humano;
+                    let nodoHijo = new Nodo(tablero);
+                    nodo.anadirHijo(nodoHijo);
                     // Obtner el valor devulto por MAX
-                    let valor = this.maxValor(tablero, profundidad + 1);
+                    let valor = this.maxValor(nodoHijo, profundidad + 1);
                     tablero[i][j] = Ficha.vacio; // Reinici el tablero
                     // Verifica si el valor moviento es mejor (MENOR) al actual
                     valorEscogido = valor < valorEscogido ? valor : valorEscogido;
